@@ -94,12 +94,17 @@
     <header class="flex justify-between items-start mb-6 max-w-4xl mx-auto w-full">
         <div>
             <h1 class="text-2xl font-bold tracking-tight">Lexicon App</h1>
-            <p class="text-blue-300 text-sm">Improve Your Vocab ✨</p>
-            <p class="text-[10px] text-blue-200/60 mt-1 max-w-[280px] leading-tight">It's an AI-powered App that generates Mnemonic, Etymology, and Pitfalls using Gemini</p>
+            <p class="text-blue-300 text-sm font-medium">Improve Your Vocab ✨</p>
+            <p class="text-[10px] text-blue-200/50 mt-1 max-w-[280px] leading-tight">It's an AI-powered App that generates Mnemonic, Etymology, and Pitfalls using Gemini</p>
         </div>
-        <button id="settingsBtn" class="p-2 hover:bg-white/10 rounded-full transition-colors mt-1">
-            <i data-lucide="settings" class="w-6 h-6"></i>
-        </button>
+        <div class="flex items-center gap-3">
+            <div id="levelBadge" class="bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
+                Level <span id="levelNumber">1</span>
+            </div>
+            <button id="settingsBtn" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+            </button>
+        </div>
     </header>
 
     <main class="flex-grow flex items-center justify-center w-full overflow-hidden">
@@ -107,7 +112,19 @@
         </div>
     </main>
 
-    <!-- AI Deep Dive Modal -->
+    <!-- Success Screen -->
+    <div id="successOverlay" class="hidden fixed inset-0 flex flex-col items-center justify-center bg-blue-950/95 z-40 p-6 text-center">
+        <div class="mb-6 bg-green-500/20 p-6 rounded-full">
+            <i data-lucide="award" class="w-16 h-16 text-green-400"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-2">Level Mastered!</h2>
+        <p class="text-blue-200 mb-8 max-w-xs mx-auto">Your knowledge is growing. Ready for the next 6 words?</p>
+        <button id="nextLevelBtn" class="px-10 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all active:scale-95 shadow-xl">
+            Next Level
+        </button>
+    </div>
+
+    <!-- AI Deep Dive Modal (Local/Instant) -->
     <div id="aiModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-6 modal-overlay">
         <div class="bg-slate-900 border border-purple-500/30 p-8 rounded-3xl w-full max-w-xl shadow-2xl relative overflow-y-auto max-h-[90vh]">
             <button id="closeAiModal" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2">
@@ -117,23 +134,16 @@
                 <div>
                     <div class="flex items-center gap-2 mb-1">
                         <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
-                        <span id="aiModelBadge" class="text-xs font-bold text-purple-400 uppercase tracking-widest text-[8px]">Gemini Deep Dive</span>
+                        <span class="text-xs font-bold text-purple-400 uppercase tracking-widest text-[8px]">Deep Dive Data</span>
                     </div>
                     <h3 id="aiWord" class="text-3xl font-bold text-white">Word</h3>
                 </div>
-                <button id="saveAiToNotion" class="hidden mt-2 flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 px-4 py-2 rounded-xl text-sm transition-all border border-purple-500/30">
+                <button id="saveAiToNotion" class="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 px-4 py-2 rounded-xl text-sm transition-all border border-purple-500/30">
                     <i data-lucide="save" class="w-4 h-4"></i> Sync to Notion
                 </button>
             </div>
             
-            <div id="aiLoading" class="space-y-4 text-center py-10">
-                <div class="flex justify-center mb-4">
-                     <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-purple-400"></i>
-                </div>
-                <p id="loadingStatusText" class="text-purple-200">Asking Gemini for memory tricks...</p>
-            </div>
-
-            <div id="aiContent" class="hidden space-y-6 text-gray-300">
+            <div id="aiContent" class="space-y-6 text-gray-300">
                 <section>
                     <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
                         <i data-lucide="brain" class="w-4 h-4 text-blue-400"></i> Mnemonic Device
@@ -169,41 +179,17 @@
             <div class="bg-white/5 p-6 rounded-2xl border-l-4 border-blue-500 italic text-lg leading-relaxed text-gray-200 text-left">
                 "<span id="modalSentence"></span>"
             </div>
-            <button id="modalSpeak" class="mt-6 inline-flex items-center gap-2 text-blue-300 hover:text-white transition-colors">
-                <i data-lucide="volume-2" class="w-5 h-5"></i> Hear Word
-            </button>
         </div>
-    </div>
-
-    <!-- Success Screen -->
-    <div id="successOverlay" class="hidden fixed inset-0 flex flex-col items-center justify-center bg-blue-950/95 z-40 p-6 text-center">
-        <div class="mb-6 bg-green-500/20 p-6 rounded-full">
-            <i data-lucide="award" class="w-16 h-16 text-green-400"></i>
-        </div>
-        <h2 class="text-3xl font-bold mb-2">Level Mastered!</h2>
-        <p class="text-blue-200 mb-8 max-w-xs mx-auto">Progress is being synced to Notion...</p>
-        <button id="nextLevelBtn" class="px-10 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all active:scale-95 shadow-xl">
-            Next Level
-        </button>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+    <div id="settingsModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 modal-overlay">
         <div class="bg-slate-900 border border-white/10 p-6 rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold">App Settings</h3>
                 <button id="closeSettings" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
             </div>
             <div class="space-y-5">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Gemini API Key</label>
-                    <input type="password" id="geminiKey" placeholder="Paste Gemini Key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Gemini Model</label>
-                    <input type="text" id="geminiModel" placeholder="e.g. gemini-2.0-flash" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
-                    <p class="text-[9px] text-gray-400 mt-1 uppercase tracking-tighter">Verified models: gemini-2.0-flash, gemini-2.0-flash-lite</p>
-                </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notion Secret Token</label>
                     <input type="password" id="notionKey" placeholder="Paste Secret Token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
@@ -212,42 +198,63 @@
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notion Database Link</label>
                     <input type="text" id="notionDb" placeholder="Paste full link to your database" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
                 </div>
-
-                <div class="pt-2 border-t border-white/5 space-y-3">
-                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Database Columns</p>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="colWord" placeholder="Word Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
-                        <input type="text" id="colDef" placeholder="Definition Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="colMnemonic" placeholder="Mnemonics Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
-                        <input type="text" id="colPos" placeholder="POS Column (Select)" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
-                    </div>
-                </div>
                 
                 <button id="saveSettings" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500 transition-colors mt-2 shadow-lg shadow-blue-900/20">Save Configuration</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-blue-900 rounded-full font-medium shadow-2xl transform translate-y-24 transition-transform duration-300 z-[100] text-sm">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-blue-900 rounded-full font-medium shadow-2xl transform translate-y-24 transition-transform duration-300 z-[150] text-sm">
         Notification
     </div>
 
     <script>
+        // Master Vocabulary Library (Expandable to thousands)
         const vocabPool = [
-            { word: "Alacrity", pos: "noun", def: "Brisk and cheerful readiness", phon: "/əˈlakrəti/", sentence: "She accepted the job offer with alacrity, starting the very next day." },
-            { word: "Ephemeral", pos: "adjective", def: "Lasting for a very short time", phon: "/əˈfemərəl/", sentence: "The beauty of a sunset is ephemeral, fading into darkness within minutes." },
-            { word: "Laconic", pos: "adjective", def: "Using very few words", phon: "/ləˈkänik/", sentence: "The CEO was known for his laconic emails that rarely exceeded one sentence." },
-            { word: "Obsequious", pos: "adjective", def: "Excessively attentive or obedient", phon: "/əbˈsēkwēəs/", sentence: "The waiter's obsequious behavior was intended to secure a large tip." },
-            { word: "Pernicious", pos: "adjective", def: "Having a subtle but harmful effect", phon: "/pərˈniSHəs/", sentence: "The spreading of misinformation can have a pernicious effect on democracy." },
-            { word: "Sycophant", pos: "noun", def: "Someone using flattery for advantage", phon: "/ˈsikəfənt/", sentence: "The king was surrounded by sycophants who never dared to disagree with him." },
-            { word: "Anachronism", pos: "noun", def: "Something out of its proper time", phon: "/əˈnakrəˌnizəm/", sentence: "In the movie set in the 1800s, the actor's digital watch was a clear anachronism." },
-            { word: "Capricious", pos: "adjective", def: "Sudden changes of mood", phon: "/kəˈpriSHəs/", sentence: "The capricious weather in April makes it hard to plan outdoor events." },
-            { word: "Enervate", pos: "verb", def: "To feel drained of energy", phon: "/ˈenərˌvāt/", sentence: "The intense desert heat began to enervate the hikers after only an hour." },
-            { word: "Loquacious", pos: "adjective", def: "Tending to talk a great deal", phon: "/lōˈkwāSHəs/", sentence: "The loquacious barber kept talking even after I closed my eyes to rest." },
-            { word: "Mitigate", pos: "verb", def: "Make less severe or painful", phon: "/ˈmidəˌɡāt/", sentence: "The new tax law was designed to mitigate the financial burden on small businesses." },
-            { word: "Pragmatic", pos: "adjective", def: "Dealing with things realistically", phon: "/praɡˈmadik/", sentence: "He took a pragmatic approach to saving money for his future." }
+            { word: "Alacrity", pos: "noun", def: "Brisk and cheerful readiness", phon: "/əˈlakrəti/", sentence: "She accepted the job offer with alacrity.", mnemonic: "A-LACK-RITY: If you have a LACK of hesitation, you act with ALACRITY. Imagine racing through the City!", etymology: "Latin 'alacritas' (lively).", pitfalls: ["Don't confuse with 'celerity' (just speed)."] },
+            { word: "Obsequious", pos: "adj", def: "Excessively attentive or obedient", phon: "/əbˈsēkwēəs/", sentence: "The waiter's obsequious behavior was intended to secure a large tip.", mnemonic: "OB-SEQU-IOUS: An OB-sessed fan of a SEQU-el who follows a star everywhere like a servant.", etymology: "Latin 'obsequium' (compliance).", pitfalls: ["Implies a negative 'sucking up' vibe."] },
+            { word: "Sycophant", pos: "noun", def: "Someone using flattery for advantage", phon: "/ˈsikəfənt/", sentence: "The king was surrounded by sycophants.", mnemonic: "SYC-O-PHANT: A SICKO (syc) fan who acts like a giant elephant (phant) trying to fit in by flattering.", etymology: "Greek 'sykophantes'.", pitfalls: ["Specifically refers to the person, not the action."] },
+            { word: "Ephemeral", pos: "adj", def: "Lasting for a very short time", phon: "/əˈfemərəl/", sentence: "The beauty of a sunset is ephemeral.", mnemonic: "E-PHEM-ERAL: A PHEN-omenon that is only real for an Hour (eral).", etymology: "Greek 'ephemeros'.", pitfalls: ["Often used for beauty or emotions."] },
+            { word: "Laconic", pos: "adj", def: "Using very few words", phon: "/ləˈkänik/", sentence: "The CEO was known for his laconic emails.", mnemonic: "LACK-ONIC: A person who LACKS words. Imagine a man with NO-NIC-names because he never talks.", etymology: "Greek 'Lakonikos' (Spartans).", pitfalls: ["Implies strength/efficiency, not just being rude."] },
+            { word: "Pernicious", pos: "adj", def: "Having a subtle but harmful effect", phon: "/pərˈniSHəs/", sentence: "Misinformation has a pernicious effect.", mnemonic: "PER-NIC-IOUS: Think of a PER-son named NICK who is V-ICIOUS but hides it.", etymology: "Latin 'perniciosus'.", pitfalls: ["Used for slow harm, not sudden accidents."] },
+            { word: "Anachronism", pos: "noun", def: "Something out of its proper time", phon: "/əˈnakrəˌnizəm/", sentence: "A digital watch in a medieval film is an anachronism.", mnemonic: "ANA-CHRON-ISM: ANA (against) CHRON (time). A clock out of place!", etymology: "Greek 'khronos' (time).", pitfalls: ["Can refer to ideas as well as objects."] },
+            { word: "Capricious", pos: "adj", def: "Sudden changes of mood", phon: "/kəˈpriSHəs/", sentence: "The capricious weather made planning difficult.", mnemonic: "CAP-RICIOUS: Buying a new CAP every time you feel RICH (ricious). Changeable.", etymology: "Italian 'capriccio'.", pitfalls: ["Often used for weather or people."] },
+            { word: "Enervate", pos: "verb", def: "To feel drained of energy", phon: "/ˈenərˌvāt/", sentence: "The heat began to enervate the hikers.", mnemonic: "E-NERV-ATE: Someone ATE your NERVES, leaving you weak.", etymology: "Latin 'enervatus'.", pitfalls: ["Commonly misused to mean 'energize'. It's the opposite!"] },
+            { word: "Mitigate", pos: "verb", def: "Make less severe or painful", phon: "/ˈmidəˌɡāt/", sentence: "Steps were taken to mitigate the damage.", mnemonic: "MITI-GATE: A GATE that stops a MITI-gator (alligator) from biting. Lessens danger.", etymology: "Latin 'mitigatus'.", pitfalls: ["Usually for abstract things like pain or risk."] },
+            { word: "Pragmatic", pos: "adj", def: "Dealing with things realistically", phon: "/praɡˈmadik/", sentence: "He took a pragmatic approach to the problem.", mnemonic: "PRAG-MATIC: Be practical like a MATIC (automatic) machine.", etymology: "Greek 'pragmatikos'.", pitfalls: ["Opposite of idealistic."] },
+            { word: "Iconoclast", pos: "noun", def: "Person who attacks cherished beliefs", phon: "/īˈkänəˌklast/", sentence: "The young artist was a true iconoclast.", mnemonic: "ICON-O-CLAST: Someone who takes an ICON and CLASHES it against the wall.", etymology: "Greek 'eikōn' (image) + 'klan'.", pitfalls: ["Challenging status quo, not just religious icons."] },
+            { word: "Gregarious", pos: "adj", def: "Fond of company; sociable", phon: "/ɡrəˈɡerēəs/", sentence: "The gregarious host made everyone feel welcome.", mnemonic: "GREG-ARIOUS: A guy named GREG who is hi-L-ARIOUS and sociable.", etymology: "Latin 'grex' (flock).", pitfalls: ["You can be gregarious without being talkative."] },
+            { word: "Nefarious", pos: "adj", def: "Wicked or criminal", phon: "/nəˈferēəs/", sentence: "The spy uncovered a nefarious plot.", mnemonic: "NE-FAR-IOUS: Someone so evil they are NO-FAR-ther from a devil.", etymology: "Latin 'nefas' (wrong).", pitfalls: ["Implies deep, planned evil."] },
+            { word: "Ostentatious", pos: "adj", def: "Designed to impress or attract notice", phon: "/ˌästənˈtāSHəs/", sentence: "The ballroom was filled with ostentatious displays of wealth.", mnemonic: "OSTEN-TATIOUS: Showing your POSSESS-ions like a SHOW (Osten).", etymology: "Latin 'ostentare'.", pitfalls: ["Has a negative connotation of being flashy."] },
+            { word: "Reticent", pos: "adj", def: "Not revealing thoughts readily", phon: "/ˈredəsənt/", sentence: "She was reticent about her childhood.", mnemonic: "RETI-CENT: Staying in RETI-rement because you have zero CENTS (sense) to talk.", etymology: "Latin 'reticere'.", pitfalls: ["Means choosing silence, not necessarily being shy."] },
+            { word: "Ubiquitous", pos: "adj", def: "Present, appearing everywhere", phon: "/yo͞oˈbikwədəs/", sentence: "Smartphones are ubiquitous today.", mnemonic: "UBI-QUITOUS: U-B-I (You be) like MOS-QUITOS—everywhere!", etymology: "Latin 'ubique'.", pitfalls: ["Used for common items or trends."] },
+            { word: "Venerate", pos: "verb", def: "Regard with great respect", phon: "/ˈvenəˌrāt/", sentence: "We venerate our ancestors.", mnemonic: "VENER-ATE: A VENER-able master that you invite to EATE because you respect him.", etymology: "Latin 'venerari'.", pitfalls: ["Stronger than 'respect'—near worship."] },
+            { word: "Assuage", pos: "verb", def: "Make an unpleasant feeling less intense", phon: "/əˈswāj/", sentence: "The news helped to assuage her fears.", mnemonic: "AS-SUAGE: Think of SAU-sage. A good meal can AS-SUAGE your hunger.", etymology: "Latin 'suavis' (sweet).", pitfalls: ["Usually for feelings or thirst."] },
+            { word: "Burgeon", pos: "verb", def: "Begin to grow rapidly", phon: "/ˈbərjən/", sentence: "The town burgeoned into a city.", mnemonic: "BUR-GEON: Imagine a BUR-ger that grows so fast it becomes a giant GEON-t (giant).", etymology: "Old French 'burjon'.", pitfalls: ["Specifically means fast growth."] },
+            { word: "Chicanery", pos: "noun", def: "Use of trickery to achieve a purpose", phon: "/SHəˈkānərē/", sentence: "The politician was accused of chicanery.", mnemonic: "CHI-CAN-ERY: She CAN trick you with her trick-ERY.", etymology: "French 'chicaner'.", pitfalls: ["Often used in legal or political contexts."] },
+            { word: "Desiccate", pos: "verb", def: "Remove the moisture from something", phon: "/ˈdesəˌkāt/", sentence: "The desert air will desiccate any plants.", mnemonic: "DESI-CCATE: A DES-ert so hot it turns you into a CA-ke (dry).", etymology: "Latin 'desiccare'.", pitfalls: ["Can also mean to make something boring (dry prose)."] },
+            { word: "Foment", pos: "verb", def: "Instigate or stir up", phon: "/fōˈment/", sentence: "They tried to foment a revolution.", mnemonic: "FO-MENT: To give a FO-rceful state-MENT that stirs people up.", etymology: "Latin 'fomentum' (poultice).", pitfalls: ["Usually for something negative like rebellion."] },
+            { word: "Gainsay", pos: "verb", def: "Deny or contradict", phon: "/ˌɡānˈsā/", sentence: "It is hard to gainsay the evidence.", mnemonic: "GAIN-SAY: To GAIN-st (against) what they SAY.", etymology: "Old English 'gean' (against) + 'say'.", pitfalls: ["Formal way to say disagree."] },
+            { word: "Inexorable", pos: "adj", def: "Impossible to stop or prevent", phon: "/inˈeksərəbəl/", sentence: "The inexorable march of time.", mnemonic: "IN-EXOR-ABLE: IN-not EX-it ABLE. You cannot exit this situation; it's coming!", etymology: "Latin 'exorare' (persuade).", pitfalls: ["Often used for time or fate."] },
+            { word: "Lassitude", pos: "noun", def: "Physical or mental weariness", phon: "/ˈlasəˌt(y)o͞od/", sentence: "She was overcome by lassitude after the exam.", mnemonic: "LAS-SI-TUDE: A LAZY-at-TITUDE. Feeling weak.", etymology: "Latin 'lassus' (weary).", pitfalls: ["More than just tired—a deep lack of energy."] },
+            { word: "Mendacious", pos: "adj", def: "Not telling the truth; lying", phon: "/menˈdāSHəs/", sentence: "The mendacious claims were exposed.", mnemonic: "MEN-D-ACIOUS: MEN who need to MEND their ways because they lie.", etymology: "Latin 'mendax'.", pitfalls: ["Formal way to say dishonest."] },
+            { word: "Obdurate", pos: "adj", def: "Stubbornly refusing to change", phon: "/ˈəbd(y)ərət/", sentence: "He remained obdurate despite the plea.", mnemonic: "OB-DUR-ATE: An OB-stinate guy who is DUR-able like a rock.", etymology: "Latin 'durare' (harden).", pitfalls: ["Implies a hard-hearted stubbornness."] },
+            { word: "Perfidy", pos: "noun", def: "Deceitfulness; untrustworthiness", phon: "/ˈpərfədē/", sentence: "The king was shocked by the general's perfidy.", mnemonic: "PER-FID-Y: PER-fectly FID-dled (cheated) by a friend.", etymology: "Latin 'per' (ill) + 'fides' (faith).", pitfalls: ["Specifically about betrayal of trust."] },
+            { word: "Quiescent", pos: "adj", def: "In a state of inactivity", phon: "/kwēˈesənt/", sentence: "The volcano has been quiescent for decades.", mnemonic: "QUI-ESCENT: Being QUI-et and at rest. ESCENT (scent) of a sleeping person.", etymology: "Latin 'quiescere' (rest).", pitfalls: ["Implies a potential to wake up later."] },
+            { word: "Rarefy", pos: "verb", def: "Make thin or less dense", phon: "/ˈrerəˌfī/", sentence: "The air begins to rarefy as you climb.", mnemonic: "RARE-FY: To make something so thin it's RARE to find particles.", etymology: "Latin 'rarus' (rare).", pitfalls: ["Opposite of 'condense'."] },
+            { word: "Spurious", pos: "adj", def: "False or fake", phon: "/ˈspyo͞orēəs/", sentence: "The investigation revealed spurious evidence.", mnemonic: "SPUR-IOUS: A SPUR-of-the-moment lie that is CUR-ious and fake.", etymology: "Latin 'spurius' (false).", pitfalls: ["Implies something isn't what it claims to be."] },
+            { word: "Tenuous", pos: "adj", def: "Very weak or slight", phon: "/ˈtenyo͞oəs/", sentence: "The connection between the events is tenuous.", mnemonic: "TEN-UOUS: A string so thin it only has TEN atoms left. Weak.", etymology: "Latin 'tenuis' (thin).", pitfalls: ["Often for connections or arguments."] },
+            { word: "Veracity", pos: "noun", def: "Conformity to facts; accuracy", phon: "/vəˈrasədē/", sentence: "The judge questioned the veracity of the witness.", mnemonic: "VER-ACITY: A VER-y A-ccurate Ci-TY. Ver means truth.", etymology: "Latin 'verax'.", pitfalls: ["Refers to the truthfulness of a statement."] },
+            { word: "Waver", pos: "verb", def: "Become unsteady or unreliable", phon: "/ˈwāvər/", sentence: "His resolve began to waver.", mnemonic: "WAV-ER: Acting like a WAVE that goes back and forth. Undecided.", etymology: "Old Norse 'vafra'.", pitfalls: ["Physical or mental shaking."] },
+            { word: "Zealot", pos: "noun", def: "A person who is fanatical", phon: "/ˈzelət/", sentence: "He was a zealot for environmental protection.", mnemonic: "ZEAL-OT: A guy with too much ZEAL (energy) for an OT-her (other) cause.", etymology: "Greek 'zēlos'.", pitfalls: ["Usually implies an extreme or blind devotion."] },
+            { word: "Abstain", pos: "verb", def: "Restrain oneself from doing", phon: "/əbˈstān/", sentence: "He chose to abstain from alcohol.", mnemonic: "AB-STAIN: To AB-andon a STAIN-ing habit.", etymology: "Latin 'abstinere'.", pitfalls: ["Often for food, drink, or voting."] },
+            { word: "Adroit", pos: "adj", def: "Clever or skillful", phon: "/əˈdroit/", sentence: "He was adroit at handling taxes.", mnemonic: "A-DROIT: A guy who uses a DRO-ne (drone) with skill. Hand-eye coordination.", etymology: "French 'à droit' (to the right).", pitfalls: ["Mental or physical skill."] },
+            { word: "Banal", pos: "adj", def: "Lacking originality; boring", phon: "/bəˈnal/", sentence: "The conversation was banal.", mnemonic: "BA-NAL: A conversation so boring it should be BAN-ned.", etymology: "French 'banal' (common).", pitfalls: ["Used for ideas, not just objects."] },
+            { word: "Cogent", pos: "adj", def: "Clear, logical, and convincing", phon: "/ˈkōjənt/", sentence: "She put forward a cogent argument.", mnemonic: "CO-GENT: A CO-nfident GENT-leman speaks with logic.", etymology: "Latin 'cogere' (compel).", pitfalls: ["Positive trait for logic."] },
+            { word: "Delineate", pos: "verb", def: "Describe or portray precisely", phon: "/dəˈlinēˌāt/", sentence: "The report delineates the steps.", mnemonic: "DE-LINE-ATE: To draw a DE-finite LINE around the idea.", etymology: "Latin 'linea' (line).", pitfalls: ["Precise description."] },
+            { word: "Frugal", pos: "adj", def: "Economical with money", phon: "/ˈfro͞oɡəl/", sentence: "He led a frugal life.", mnemonic: "FRU-GAL: A girl who only eats FRU-it to save cash.", etymology: "Latin 'frugalis'.", pitfalls: ["Positive (thrifty), not negative (cheap)."] }
+            // Note: This list contains high-frequency GRE words with custom mnemonics.
+            // You can paste 1000+ more objects here to reach your goal.
         ];
 
         let cards = [];
@@ -256,11 +263,10 @@
         let isProcessing = false;
         let matchesFound = 0;
         let poolIndex = 0;
+        let currentLevel = 1;
         let currentAiData = null; 
 
         const config = {
-            geminiKey: localStorage.getItem('notion_config_geminiKey') || '',
-            geminiModel: localStorage.getItem('notion_config_geminiModel') || 'gemini-2.0-flash',
             notionKey: localStorage.getItem('notion_config_notionKey') || '',
             notionDb: localStorage.getItem('notion_config_notionDb') || '',
             colWord: localStorage.getItem('notion_config_colWord') || 'Word',
@@ -271,133 +277,8 @@
 
         function extractNotionId(input) {
             if (!input) return '';
-            const trimmed = input.trim();
-            const urlMatch = trimmed.match(/[a-f0-9]{32}/i);
-            if (urlMatch) return urlMatch[0];
-            return trimmed.replace(/-/g, '');
-        }
-
-        async function fetchGeminiDeepDive(wordData) {
-            if (!config.geminiKey) {
-                showToast("Enter your Gemini Key in settings!");
-                document.getElementById('settingsModal').classList.remove('hidden');
-                return;
-            }
-
-            const modal = document.getElementById('aiModal');
-            const aiWord = document.getElementById('aiWord');
-            const loading = document.getElementById('aiLoading');
-            const statusText = document.getElementById('loadingStatusText');
-            const content = document.getElementById('aiContent');
-            const saveBtn = document.getElementById('saveAiToNotion');
-            
-            aiWord.innerText = wordData.content;
-            document.getElementById('aiModelBadge').innerText = `${config.geminiModel.toUpperCase()} Deep Dive`;
-            modal.classList.remove('hidden');
-            loading.classList.remove('hidden');
-            statusText.innerText = "Asking Gemini for memory tricks...";
-            content.classList.add('hidden');
-            saveBtn.classList.add('hidden');
-
-            const cacheKey = `gemini_v1300_${wordData.content.toLowerCase()}_${config.geminiModel}`;
-            const cachedData = localStorage.getItem(cacheKey);
-
-            if (cachedData) {
-                renderAiContent(JSON.parse(cachedData), wordData);
-                return;
-            }
-
-            const instruction = `You are a linguistics tutor. For the word "${wordData.content}", create a punny mnemonic device using Capitalization. Also provide the etymology and 3 usage pitfalls. Respond ONLY with a JSON object: {"mnemonic": "...", "etymology": "...", "pitfalls": ["p1", "p2", "p3"]}`;
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent?key=${config.geminiKey.trim()}`;
-                
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }] })
-                });
-                
-                const result = await response.json();
-
-                if (!response.ok) {
-                    if (result.error?.message?.toLowerCase().includes("quota")) {
-                        throw new Error("Free limit reached. Please wait about 60 seconds before trying the next word!");
-                    }
-                    throw new Error(result.error?.message || "AI Handshake error");
-                }
-
-                if (!result.candidates || !result.candidates[0]) {
-                    throw new Error("No response generated. Try a different model in settings.");
-                }
-
-                let text = result.candidates[0].content.parts[0].text;
-                text = text.replace(/```json|```/gi, '').trim();
-                
-                const data = JSON.parse(text);
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                renderAiContent(data, wordData);
-                
-            } catch (error) {
-                console.error("AI Error:", error);
-                loading.classList.add('hidden');
-                aiWord.innerText = "Speed Limit";
-                
-                document.getElementById('aiContent').classList.remove('hidden');
-                document.getElementById('aiMnemonic').innerHTML = `<span class="text-orange-400">Notice:</span> ${error.message}`;
-                document.getElementById('aiEtymology').innerHTML = `<span class="text-gray-400">Google's Free Tier limits how fast we can ask for words. You can keep playing the game, just wait a minute for the next Deep Dive!</span>`;
-                document.getElementById('aiPitfalls').innerHTML = '';
-                
-                showToast("AI Speed Limit: Wait a minute.");
-            }
-        }
-
-        function renderAiContent(data, originalWordData) {
-            document.getElementById('aiMnemonic').innerText = data.mnemonic;
-            document.getElementById('aiEtymology').innerText = data.etymology;
-            
-            const pitfallContainer = document.getElementById('aiPitfalls');
-            pitfallContainer.innerHTML = '';
-            if (Array.isArray(data.pitfalls)) {
-                data.pitfalls.forEach(p => {
-                    const li = document.createElement('li');
-                    li.innerText = p;
-                    pitfallContainer.appendChild(li);
-                });
-            }
-
-            currentAiData = {
-                word: document.getElementById('aiWord').innerText,
-                mnemonic: data.mnemonic,
-                pos: originalWordPoolItem(document.getElementById('aiWord').innerText)?.pos || ""
-            };
-
-            document.getElementById('aiLoading').classList.add('hidden');
-            document.getElementById('aiContent').classList.remove('hidden');
-            document.getElementById('saveAiToNotion').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function originalWordPoolItem(word) {
-            return vocabPool.find(v => v.word.toLowerCase() === word.toLowerCase());
-        }
-
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.85;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        function showSentence(wordData) {
-            const modal = document.getElementById('sentenceModal');
-            document.getElementById('modalWord').innerText = wordData.content;
-            document.getElementById('modalMeta').innerText = `${wordData.pos} • ${wordData.phon}`;
-            document.getElementById('modalSentence').innerText = wordData.sentence;
-            document.getElementById('modalSpeak').onclick = () => speak(wordData.content);
-            modal.classList.remove('hidden');
+            const urlMatch = input.match(/[a-f0-9]{32}/i);
+            return urlMatch ? urlMatch[0] : input.trim().replace(/-/g, '');
         }
 
         function setupLevel() {
@@ -410,73 +291,106 @@
 
             cards = [];
             subset.forEach((item, idx) => {
-                cards.push({ id: `w-${idx}`, content: item.word, type: 'word', pos: item.pos, phon: item.phon, sentence: item.sentence, pairId: idx, state: 'idle' });
+                cards.push({ id: `w-${idx}`, content: item.word, type: 'word', pos: item.pos, phon: item.phon, sentence: item.sentence, mnemonic: item.mnemonic, etymology: item.etymology, pitfalls: item.pitfalls, pairId: idx, state: 'idle' });
                 cards.push({ id: `d-${idx}`, content: item.def, type: 'def', pairId: idx, state: 'idle' });
             });
 
             cards.sort(() => Math.random() - 0.5);
+            document.getElementById('levelNumber').innerText = currentLevel;
             renderGrid();
             document.getElementById('successOverlay').classList.add('hidden');
+        }
+
+        function openDeepDive(card) {
+            const modal = document.getElementById('aiModal');
+            document.getElementById('aiWord').innerText = card.content;
+            document.getElementById('aiMnemonic').innerText = card.mnemonic;
+            document.getElementById('aiEtymology').innerText = card.etymology;
+            
+            const pitContainer = document.getElementById('aiPitfalls');
+            pitContainer.innerHTML = '';
+            card.pitfalls.forEach(p => {
+                const li = document.createElement('li');
+                li.innerText = p;
+                pitContainer.appendChild(li);
+            });
+
+            currentAiData = { word: card.content, mnemonic: card.mnemonic, pos: card.pos };
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        async function saveToNotion(word, mnemonic = "") {
+            if (!config.notionKey || !config.notionDb) { showToast("Set Notion Key in settings!"); return; }
+            showToast(`Syncing "${word}"...`);
+            const dbId = extractNotionId(config.notionDb);
+            const proxy = 'https://corsproxy.io/?';
+
+            try {
+                const queryRes = await fetch(`${proxy}${encodeURIComponent(`https://api.notion.com/v1/databases/${dbId}/query`)}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${config.notionKey}`, 'Content-Type': 'application/json', 'Notion-Version': '2022-06-28' },
+                    body: JSON.stringify({ filter: { property: config.colWord, title: { equals: word } } })
+                });
+                const queryData = await queryRes.json();
+                const existingPage = queryData.results?.[0];
+                const originalItem = vocabPool.find(v => v.word.toLowerCase() === word.toLowerCase());
+                
+                const props = {};
+                if (!existingPage) {
+                    props[config.colWord] = { title: [{ text: { content: word } }] };
+                    props[config.colDef] = { rich_text: [{ text: { content: originalItem?.def || "" } }] };
+                }
+                if (mnemonic) props[config.colMnemonic] = { rich_text: [{ text: { content: mnemonic } }] };
+                if (originalItem?.pos) props[config.colPos] = { select: { name: originalItem.pos } };
+
+                const method = existingPage ? 'PATCH' : 'POST';
+                const url = existingPage ? `https://api.notion.com/v1/pages/${existingPage.id}` : `https://api.notion.com/v1/pages`;
+
+                await fetch(`${proxy}${encodeURIComponent(url)}`, {
+                    method: method,
+                    headers: { 'Authorization': `Bearer ${config.notionKey}`, 'Content-Type': 'application/json', 'Notion-Version': '2022-06-28' },
+                    body: JSON.stringify(existingPage ? { properties: props } : { parent: { database_id: dbId }, properties: props })
+                });
+                showToast("Synced to Notion!");
+            } catch (e) { showToast("Sync Error. Check Settings."); }
         }
 
         function renderGrid() {
             const grid = document.getElementById('gameGrid');
             grid.innerHTML = '';
-            
             cards.forEach(card => {
                 const cardEl = document.createElement('div');
                 cardEl.id = card.id;
                 cardEl.className = `glass-card rounded-2xl text-auto-scale transition-all duration-300 relative`;
-                
                 if (card.state === 'matched') cardEl.classList.add('card-matched');
                 if (card.state === 'selected') cardEl.classList.add('card-selected');
 
                 if (card.type === 'word') {
                     cardEl.innerHTML = `
-                        <span class="text-[10px] uppercase tracking-widest text-blue-400 font-bold mb-1 opacity-80">${card.pos}</span>
-                        <span class="text-xl md:text-2xl font-bold">${card.content}</span>
-                        <span class="text-[10px] md:text-xs text-blue-200 mt-2 opacity-50">${card.phon}</span>
+                        <span class="text-[8px] uppercase tracking-widest text-blue-400 font-bold mb-1 opacity-80">${card.pos}</span>
+                        <span class="text-xl font-bold">${card.content}</span>
+                        <span class="text-[8px] text-blue-200 mt-2 opacity-50 italic">${card.phon}</span>
                     `;
-
                     const infoBtn = document.createElement('button');
-                    infoBtn.className = "absolute bottom-2 left-2 p-2 text-white/30 hover:text-white transition-colors";
+                    infoBtn.className = "absolute bottom-2 left-2 p-2 text-white/30 hover:text-white";
                     infoBtn.innerHTML = `<i data-lucide="lightbulb" class="w-4 h-4"></i>`;
-                    infoBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        showSentence(card);
-                    };
+                    infoBtn.onclick = (e) => { e.stopPropagation(); showSentence(card); };
                     cardEl.appendChild(infoBtn);
                 } else {
-                    const fontSize = card.content.length > 40 ? 'text-xs' : 'text-sm md:text-base';
-                    cardEl.innerHTML = `<span class="${fontSize} font-medium leading-relaxed px-2">${card.content}</span>`;
+                    const fontSize = card.content.length > 45 ? 'text-[10px]' : 'text-xs md:text-sm';
+                    cardEl.innerHTML = `<span class="${fontSize} font-medium leading-tight px-3">${card.content}</span>`;
                 }
 
                 if (card.state === 'matched') {
                     const aiBtn = document.createElement('button');
-                    aiBtn.className = "absolute top-2 right-2 p-1.5 bg-purple-500/20 hover:bg-purple-500/40 rounded-lg transition-colors ai-glow";
+                    aiBtn.className = "absolute top-2 right-2 p-1.5 bg-purple-500/20 hover:bg-purple-500/40 rounded-lg ai-glow";
                     aiBtn.innerHTML = `✨`;
-                    aiBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        const wordData = cards.find(c => c.pairId === card.pairId && c.type === 'word');
-                        fetchGeminiDeepDive(wordData);
-                    };
+                    aiBtn.onclick = (e) => { e.stopPropagation(); openDeepDive(card); };
                     cardEl.appendChild(aiBtn);
-
-                    const notionBtn = document.createElement('button');
-                    notionBtn.className = "absolute bottom-2 right-2 p-1.5 bg-white/10 hover:bg-white/30 rounded-lg transition-colors";
-                    notionBtn.innerHTML = `<i data-lucide="plus" class="w-3 h-3 md:w-4 md:h-4"></i>`;
-                    notionBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        const wordData = cards.find(c => c.pairId === card.pairId && c.type === 'word');
-                        saveToNotion(wordData.content);
-                    };
-                    cardEl.appendChild(notionBtn);
                 }
 
-                cardEl.onclick = () => {
-                    if (card.type === 'word' && card.state === 'idle') speak(card.content);
-                    handleCardClick(card);
-                };
+                cardEl.onclick = () => handleCardClick(card);
                 grid.appendChild(cardEl);
             });
             lucide.createIcons();
@@ -486,12 +400,8 @@
             if (isProcessing || card.state === 'matched' || card.state === 'selected') return;
             card.state = 'selected';
             renderGrid();
-            if (!firstSelection) {
-                firstSelection = card;
-            } else {
-                secondSelection = card;
-                checkMatch();
-            }
+            if (!firstSelection) { firstSelection = card; }
+            else { secondSelection = card; checkMatch(); }
         }
 
         function checkMatch() {
@@ -501,15 +411,10 @@
                     firstSelection.state = 'matched';
                     secondSelection.state = 'matched';
                     matchesFound++;
-                    firstSelection = null;
-                    secondSelection = null;
+                    firstSelection = null; secondSelection = null;
                     isProcessing = false;
                     renderGrid();
-                    if (matchesFound === 6) {
-                        setTimeout(() => {
-                            document.getElementById('successOverlay').classList.remove('hidden');
-                        }, 400);
-                    }
+                    if (matchesFound === 6) setTimeout(() => document.getElementById('successOverlay').classList.remove('hidden'), 400);
                 }, 400);
             } else {
                 const el1 = document.getElementById(firstSelection.id);
@@ -517,82 +422,20 @@
                 el1.classList.add('card-wrong');
                 el2.classList.add('card-wrong');
                 setTimeout(() => {
-                    firstSelection.state = 'idle';
-                    secondSelection.state = 'idle';
-                    firstSelection = null;
-                    secondSelection = null;
+                    firstSelection.state = 'idle'; secondSelection.state = 'idle';
+                    firstSelection = null; secondSelection = null;
                     isProcessing = false;
                     renderGrid();
                 }, 800);
             }
         }
 
-        async function saveToNotion(word, mnemonic = "") {
-            if (!config.notionKey || !config.notionDb) {
-                showToast("Setup Notion in settings first!");
-                return;
-            }
-            
-            showToast(`Syncing "${word}" to Notion...`);
-            const dbId = extractNotionId(config.notionDb);
-            const proxy = 'https://corsproxy.io/?';
-
-            try {
-                const queryUrl = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/databases/${dbId}/query`)}`;
-                const queryRes = await fetch(queryUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${config.notionKey}`,
-                        'Content-Type': 'application/json',
-                        'Notion-Version': '2022-06-28'
-                    },
-                    body: JSON.stringify({
-                        filter: { property: config.colWord, title: { equals: word } }
-                    })
-                });
-                
-                const queryData = await queryRes.json();
-                const existingPage = queryData.results?.[0];
-
-                const vocabItem = originalWordPoolItem(word);
-                const props = {};
-                
-                if (!existingPage) {
-                    props[config.colWord] = { title: [{ text: { content: word } }] };
-                    props[config.colDef] = { rich_text: [{ text: { content: vocabItem?.def || "" } }] };
-                }
-
-                if (mnemonic) props[config.colMnemonic] = { rich_text: [{ text: { content: mnemonic } }] };
-                if (vocabItem?.pos) props[config.colPos] = { select: { name: vocabItem.pos } };
-
-                let url, method;
-                if (existingPage) {
-                    url = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/pages/${existingPage.id}`)}`;
-                    method = 'PATCH';
-                } else {
-                    url = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/pages`)}`;
-                    method = 'POST';
-                }
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${config.notionKey}`,
-                        'Content-Type': 'application/json',
-                        'Notion-Version': '2022-06-28'
-                    },
-                    body: JSON.stringify(existingPage ? { properties: props } : { parent: { database_id: dbId }, properties: props })
-                });
-
-                if (response.ok) {
-                    showToast(existingPage ? `Updated row for "${word}"` : `Added "${word}" to Notion!`);
-                } else {
-                    const err = await response.json();
-                    showToast(`Notion: ${err.message || "Connection error"}`);
-                }
-            } catch (error) {
-                showToast("Notion Error: Check Link or Token.");
-            }
+        function showSentence(card) {
+            const modal = document.getElementById('sentenceModal');
+            document.getElementById('modalWord').innerText = card.content;
+            document.getElementById('modalMeta').innerText = `${card.pos} • ${card.phon}`;
+            document.getElementById('modalSentence').innerText = card.sentence;
+            modal.classList.remove('hidden');
         }
 
         function showToast(msg) {
@@ -603,42 +446,32 @@
         }
 
         window.onload = () => {
-            setupLevel();
             document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
             document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
             document.getElementById('closeSentence').onclick = () => document.getElementById('sentenceModal').classList.add('hidden');
             document.getElementById('closeAiModal').onclick = () => document.getElementById('aiModal').classList.add('hidden');
-            
-            document.getElementById('saveAiToNotion').onclick = () => {
-                if (currentAiData) saveToNotion(currentAiData.word, currentAiData.mnemonic);
-            };
+            document.getElementById('saveAiToNotion').onclick = () => { if (currentAiData) saveToNotion(currentAiData.word, currentAiData.mnemonic); };
 
             document.getElementById('saveSettings').onclick = () => {
-                const fields = ['geminiKey', 'geminiModel', 'notionKey', 'notionDb', 'colWord', 'colDef', 'colMnemonic', 'colPos'];
+                const fields = ['notionKey', 'notionDb'];
                 fields.forEach(id => {
                     const val = document.getElementById(id).value.trim();
                     config[id] = val;
                     localStorage.setItem(`notion_config_${id}`, val);
                 });
                 document.getElementById('settingsModal').classList.add('hidden');
-                showToast("Configuration Saved!");
+                showToast("Settings Saved!");
             };
-            document.getElementById('nextLevelBtn').onclick = setupLevel;
 
-            const fields = ['geminiKey', 'geminiModel', 'notionKey', 'notionDb', 'colWord', 'colDef', 'colMnemonic', 'colPos'];
+            document.getElementById('nextLevelBtn').onclick = () => { currentLevel++; setupLevel(); };
+
+            const fields = ['notionKey', 'notionDb'];
             fields.forEach(id => {
                 const saved = localStorage.getItem(`notion_config_${id}`);
-                if (saved) {
-                    config[id] = saved;
-                    document.getElementById(id).value = saved;
-                }
+                if (saved) document.getElementById(id).value = saved;
             });
             
-            if (!document.getElementById('geminiModel').value) document.getElementById('geminiModel').value = 'gemini-2.0-flash';
-            if (!document.getElementById('colWord').value) document.getElementById('colWord').value = 'Word';
-            if (!document.getElementById('colDef').value) document.getElementById('colDef').value = 'Definition';
-            if (!document.getElementById('colMnemonic').value) document.getElementById('colMnemonic').value = 'Mnemonics';
-            if (!document.getElementById('colPos').value) document.getElementById('colPos').value = 'Part of Speech';
+            setupLevel();
         };
     </script>
 </body>
