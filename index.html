@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexicon App - Advanced Vocabulary</title>
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #002366; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-card {
+            background: rgba(191, 219, 254, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .glass-card:hover {
+            background: rgba(191, 219, 254, 0.22);
+            transform: translateY(-2px);
+        }
+
+        .card-selected {
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            background: rgba(191, 219, 254, 0.3);
+        }
+
+        .card-matched {
+            background: rgba(34, 197, 94, 0.25) !important;
+            border-color: rgba(34, 197, 94, 0.5) !important;
+            cursor: default;
+        }
+
+        .card-wrong {
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-6px); }
+        }
+
+        .text-auto-scale {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .ai-glow {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.4); }
+            50% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(168, 85, 247, 0.4); }
+        }
+
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="text-white p-4 md:p-8">
+
+    <header class="flex justify-between items-start mb-6 max-w-4xl mx-auto w-full">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">Lexicon App</h1>
+            <p class="text-blue-300 text-sm">Improve Your Vocab ✨</p>
+            <p class="text-[10px] text-blue-200/60 mt-1 max-w-[250px] leading-tight">It's an AI-powered App that generates Mnemonic, Etymology, and Pitfalls using Gemini</p>
+        </div>
+        <button id="settingsBtn" class="p-2 hover:bg-white/10 rounded-full transition-colors mt-1">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center w-full overflow-hidden">
+        <div id="gameGrid" class="grid grid-cols-3 grid-rows-4 gap-3 md:gap-5 w-full max-w-2xl h-full max-h-[75vh]">
+        </div>
+    </main>
+
+    <!-- AI Deep Dive Modal -->
+    <div id="aiModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-6 modal-overlay">
+        <div class="bg-slate-900 border border-purple-500/30 p-8 rounded-3xl w-full max-w-xl shadow-2xl relative overflow-y-auto max-h-[90vh]">
+            <button id="closeAiModal" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="mb-6 flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                        <span class="text-xs font-bold text-purple-400 uppercase tracking-widest">Gemini Deep Dive</span>
+                    </div>
+                    <h3 id="aiWord" class="text-3xl font-bold text-white">Word</h3>
+                </div>
+                <button id="saveAiToNotion" class="hidden mt-2 flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/40 px-4 py-2 rounded-xl text-sm transition-all border border-purple-500/30">
+                    <i data-lucide="save" class="w-4 h-4"></i> Sync to Notion
+                </button>
+            </div>
+            
+            <div id="aiLoading" class="space-y-4 text-center py-10">
+                <div class="flex justify-center mb-4">
+                     <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-purple-400"></i>
+                </div>
+                <p class="text-purple-200">Asking Gemini for memory tricks...</p>
+            </div>
+
+            <div id="aiContent" class="hidden space-y-6 text-gray-300">
+                <section>
+                    <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="brain" class="w-4 h-4 text-blue-400"></i> Mnemonic Device
+                    </h4>
+                    <p id="aiMnemonic" class="italic bg-blue-500/5 p-4 rounded-xl border border-blue-500/10 text-blue-50 leading-relaxed"></p>
+                </section>
+                <section>
+                    <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 text-green-400"></i> Etymology
+                    </h4>
+                    <p id="aiEtymology" class="bg-white/5 p-3 rounded-lg"></p>
+                </section>
+                <section>
+                    <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-400"></i> Common Pitfalls
+                    </h4>
+                    <ul id="aiPitfalls" class="list-disc list-inside space-y-1 bg-white/5 p-3 rounded-lg"></ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sentence Modal -->
+    <div id="sentenceModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6 modal-overlay">
+        <div class="bg-slate-900 border border-white/20 p-8 rounded-3xl w-full max-w-lg shadow-2xl relative text-center">
+            <button id="closeSentence" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="mb-4">
+                <span id="modalWord" class="text-3xl font-bold block text-blue-400">Word</span>
+                <span id="modalMeta" class="text-sm text-blue-200 opacity-60 italic">noun • /pronunciation/</span>
+            </div>
+            <div class="bg-white/5 p-6 rounded-2xl border-l-4 border-blue-500 italic text-lg leading-relaxed text-gray-200 text-left">
+                "<span id="modalSentence"></span>"
+            </div>
+            <button id="modalSpeak" class="mt-6 inline-flex items-center gap-2 text-blue-300 hover:text-white transition-colors">
+                <i data-lucide="volume-2" class="w-5 h-5"></i> Hear Word
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successOverlay" class="hidden fixed inset-0 flex flex-col items-center justify-center bg-blue-950/95 z-40 p-6 text-center">
+        <div class="mb-6 bg-green-500/20 p-6 rounded-full">
+            <i data-lucide="award" class="w-16 h-16 text-green-400"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-2">Level Mastered!</h2>
+        <p class="text-blue-200 mb-8 max-w-xs mx-auto">Progress is being synced to Notion...</p>
+        <button id="nextLevelBtn" class="px-10 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all active:scale-95 shadow-xl">
+            Next Level
+        </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-slate-900 border border-white/10 p-6 rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">App Settings</h3>
+                <button id="closeSettings" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Gemini API Key</label>
+                    <input type="password" id="geminiKey" placeholder="Paste Gemini Key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notion Secret Token</label>
+                    <input type="password" id="notionKey" placeholder="Paste Secret Token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notion Database Link</label>
+                    <input type="text" id="notionDb" placeholder="Paste full link to your database" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="pt-2 border-t border-white/5 space-y-3">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Database Columns</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="colWord" placeholder="Word Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
+                        <input type="text" id="colDef" placeholder="Definition Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="colMnemonic" placeholder="Mnemonics Column" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
+                        <input type="text" id="colPos" placeholder="POS Column (Select)" class="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-2 text-xs text-white">
+                    </div>
+                </div>
+                
+                <button id="saveSettings" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500 transition-colors mt-2 shadow-lg shadow-blue-900/20">Save Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-blue-900 rounded-full font-medium shadow-2xl transform translate-y-24 transition-transform duration-300 z-[100] text-sm">
+        Notification
+    </div>
+
+    <script>
+        const vocabPool = [
+            { word: "Alacrity", pos: "noun", def: "Brisk and cheerful readiness", phon: "/əˈlakrəti/", sentence: "She accepted the job offer with alacrity, starting the very next day." },
+            { word: "Ephemeral", pos: "adjective", def: "Lasting for a very short time", phon: "/əˈfemərəl/", sentence: "The beauty of a sunset is ephemeral, fading into darkness within minutes." },
+            { word: "Laconic", pos: "adjective", def: "Using very few words", phon: "/ləˈkänik/", sentence: "The CEO was known for his laconic emails that rarely exceeded one sentence." },
+            { word: "Obsequious", pos: "adjective", def: "Excessively attentive or obedient", phon: "/əbˈsēkwēəs/", sentence: "The waiter's obsequious behavior was intended to secure a large tip." },
+            { word: "Pernicious", pos: "adjective", def: "Having a subtle but harmful effect", phon: "/pərˈniSHəs/", sentence: "The spreading of misinformation can have a pernicious effect on democracy." },
+            { word: "Sycophant", pos: "noun", def: "Someone using flattery for advantage", phon: "/ˈsikəfənt/", sentence: "The king was surrounded by sycophants who never dared to disagree with him." },
+            { word: "Anachronism", pos: "noun", def: "Something out of its proper time", phon: "/əˈnakrəˌnizəm/", sentence: "In the movie set in the 1800s, the actor's digital watch was a clear anachronism." },
+            { word: "Capricious", pos: "adjective", def: "Sudden changes of mood", phon: "/kəˈpriSHəs/", sentence: "The capricious weather in April makes it hard to plan outdoor events." },
+            { word: "Enervate", pos: "verb", def: "To feel drained of energy", phon: "/ˈenərˌvāt/", sentence: "The intense desert heat began to enervate the hikers after only an hour." },
+            { word: "Loquacious", pos: "adjective", def: "Tending to talk a great deal", phon: "/lōˈkwāSHəs/", sentence: "The loquacious barber kept talking even after I closed my eyes to rest." },
+            { word: "Mitigate", pos: "verb", def: "Make less severe or painful", phon: "/ˈmidəˌɡāt/", sentence: "The new tax law was designed to mitigate the financial burden on small businesses." },
+            { word: "Pragmatic", pos: "adjective", def: "Dealing with things realistically", phon: "/praɡˈmadik/", sentence: "He took a pragmatic approach to saving money for his future." }
+        ];
+
+        let cards = [];
+        let firstSelection = null;
+        let secondSelection = null;
+        let isProcessing = false;
+        let matchesFound = 0;
+        let poolIndex = 0;
+        let currentAiData = null; 
+
+        const config = {
+            geminiKey: localStorage.getItem('notion_config_geminiKey') || '',
+            notionKey: localStorage.getItem('notion_config_notionKey') || '',
+            notionDb: localStorage.getItem('notion_config_notionDb') || '',
+            colWord: localStorage.getItem('notion_config_colWord') || 'Word',
+            colDef: localStorage.getItem('notion_config_colDef') || 'Definition',
+            colMnemonic: localStorage.getItem('notion_config_colMnemonic') || 'Mnemonics',
+            colPos: localStorage.getItem('notion_config_colPos') || 'Part of Speech'
+        };
+
+        function extractNotionId(input) {
+            if (!input) return '';
+            const trimmed = input.trim();
+            const urlMatch = trimmed.match(/[a-f0-9]{32}/i);
+            if (urlMatch) return urlMatch[0];
+            return trimmed.replace(/-/g, '');
+        }
+
+        async function fetchGeminiDeepDive(wordData) {
+            if (!config.geminiKey) {
+                showToast("Set your Gemini Key in settings!");
+                document.getElementById('settingsModal').classList.remove('hidden');
+                return;
+            }
+
+            const modal = document.getElementById('aiModal');
+            const aiWord = document.getElementById('aiWord');
+            const loading = document.getElementById('aiLoading');
+            const content = document.getElementById('aiContent');
+            const saveBtn = document.getElementById('saveAiToNotion');
+            
+            aiWord.innerText = wordData.content;
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+
+            const cacheKey = `gemini_v800_${wordData.content.toLowerCase()}`;
+            const cachedData = localStorage.getItem(cacheKey);
+
+            if (cachedData) {
+                renderAiContent(JSON.parse(cachedData), wordData);
+                return;
+            }
+
+            const instruction = `You are a linguistics tutor. For the word "${wordData.content}", create a punny mnemonic device using Capitalization. Also provide the etymology and 3 usage pitfalls. Respond ONLY with a JSON object: {"mnemonic": "...", "etymology": "...", "pitfalls": ["p1", "p2", "p3"]}`;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey.trim()}`;
+                
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }] })
+                });
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "Handshake error");
+                }
+
+                const result = await response.json();
+                let text = result.candidates[0].content.parts[0].text;
+                text = text.replace(/```json|```/gi, '').trim();
+                
+                const data = JSON.parse(text);
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                renderAiContent(data, wordData);
+                
+            } catch (error) {
+                console.error("AI Error:", error);
+                loading.classList.add('hidden');
+                aiWord.innerText = "Connection Issue";
+                showToast("AI Error: Check key or model access.");
+            }
+        }
+
+        function renderAiContent(data, originalWordData) {
+            document.getElementById('aiMnemonic').innerText = data.mnemonic;
+            document.getElementById('aiEtymology').innerText = data.etymology;
+            
+            const pitfallContainer = document.getElementById('aiPitfalls');
+            pitfallContainer.innerHTML = '';
+            if (Array.isArray(data.pitfalls)) {
+                data.pitfalls.forEach(p => {
+                    const li = document.createElement('li');
+                    li.innerText = p;
+                    pitfallContainer.appendChild(li);
+                });
+            }
+
+            currentAiData = {
+                word: document.getElementById('aiWord').innerText,
+                mnemonic: data.mnemonic,
+                pos: originalWordPoolItem(document.getElementById('aiWord').innerText)?.pos || ""
+            };
+
+            document.getElementById('aiLoading').classList.add('hidden');
+            document.getElementById('aiContent').classList.remove('hidden');
+            document.getElementById('saveAiToNotion').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function originalWordPoolItem(word) {
+            return vocabPool.find(v => v.word.toLowerCase() === word.toLowerCase());
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function showSentence(wordData) {
+            const modal = document.getElementById('sentenceModal');
+            document.getElementById('modalWord').innerText = wordData.content;
+            document.getElementById('modalMeta').innerText = `${wordData.pos} • ${wordData.phon}`;
+            document.getElementById('modalSentence').innerText = wordData.sentence;
+            document.getElementById('modalSpeak').onclick = () => speak(wordData.content);
+            modal.classList.remove('hidden');
+        }
+
+        function setupLevel() {
+            matchesFound = 0;
+            const subset = [];
+            for(let i=0; i<6; i++) {
+                subset.push(vocabPool[(poolIndex + i) % vocabPool.length]);
+            }
+            poolIndex = (poolIndex + 6) % vocabPool.length;
+
+            cards = [];
+            subset.forEach((item, idx) => {
+                cards.push({ id: `w-${idx}`, content: item.word, type: 'word', pos: item.pos, phon: item.phon, sentence: item.sentence, pairId: idx, state: 'idle' });
+                cards.push({ id: `d-${idx}`, content: item.def, type: 'def', pairId: idx, state: 'idle' });
+            });
+
+            cards.sort(() => Math.random() - 0.5);
+            renderGrid();
+            document.getElementById('successOverlay').classList.add('hidden');
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            
+            cards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.id = card.id;
+                cardEl.className = `glass-card rounded-2xl text-auto-scale transition-all duration-300 relative`;
+                
+                if (card.state === 'matched') cardEl.classList.add('card-matched');
+                if (card.state === 'selected') cardEl.classList.add('card-selected');
+
+                if (card.type === 'word') {
+                    cardEl.innerHTML = `
+                        <span class="text-[10px] uppercase tracking-widest text-blue-400 font-bold mb-1 opacity-80">${card.pos}</span>
+                        <span class="text-xl md:text-2xl font-bold">${card.content}</span>
+                        <span class="text-[10px] md:text-xs text-blue-200 mt-2 opacity-50">${card.phon}</span>
+                    `;
+
+                    const infoBtn = document.createElement('button');
+                    infoBtn.className = "absolute bottom-2 left-2 p-2 text-white/30 hover:text-white transition-colors";
+                    infoBtn.innerHTML = `<i data-lucide="lightbulb" class="w-4 h-4"></i>`;
+                    infoBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        showSentence(card);
+                    };
+                    cardEl.appendChild(infoBtn);
+                } else {
+                    const fontSize = card.content.length > 40 ? 'text-xs' : 'text-sm md:text-base';
+                    cardEl.innerHTML = `<span class="${fontSize} font-medium leading-relaxed px-2">${card.content}</span>`;
+                }
+
+                if (card.state === 'matched') {
+                    const aiBtn = document.createElement('button');
+                    aiBtn.className = "absolute top-2 right-2 p-1.5 bg-purple-500/20 hover:bg-purple-500/40 rounded-lg transition-colors ai-glow";
+                    aiBtn.innerHTML = `✨`;
+                    aiBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const wordData = cards.find(c => c.pairId === card.pairId && c.type === 'word');
+                        fetchGeminiDeepDive(wordData);
+                    };
+                    cardEl.appendChild(aiBtn);
+
+                    const notionBtn = document.createElement('button');
+                    notionBtn.className = "absolute bottom-2 right-2 p-1.5 bg-white/10 hover:bg-white/30 rounded-lg transition-colors";
+                    notionBtn.innerHTML = `<i data-lucide="plus" class="w-3 h-3 md:w-4 md:h-4"></i>`;
+                    notionBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const wordData = cards.find(c => c.pairId === card.pairId && c.type === 'word');
+                        saveToNotion(wordData.content);
+                    };
+                    cardEl.appendChild(notionBtn);
+                }
+
+                cardEl.onclick = () => {
+                    if (card.type === 'word' && card.state === 'idle') speak(card.content);
+                    handleCardClick(card);
+                };
+                grid.appendChild(cardEl);
+            });
+            lucide.createIcons();
+        }
+
+        function handleCardClick(card) {
+            if (isProcessing || card.state === 'matched' || card.state === 'selected') return;
+            card.state = 'selected';
+            renderGrid();
+            if (!firstSelection) {
+                firstSelection = card;
+            } else {
+                secondSelection = card;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isProcessing = true;
+            if (firstSelection.pairId === secondSelection.pairId && firstSelection.type !== secondSelection.type) {
+                setTimeout(() => {
+                    firstSelection.state = 'matched';
+                    secondSelection.state = 'matched';
+                    matchesFound++;
+                    firstSelection = null;
+                    secondSelection = null;
+                    isProcessing = false;
+                    renderGrid();
+                    if (matchesFound === 6) {
+                        setTimeout(() => {
+                            document.getElementById('successOverlay').classList.remove('hidden');
+                        }, 400);
+                    }
+                }, 400);
+            } else {
+                const el1 = document.getElementById(firstSelection.id);
+                const el2 = document.getElementById(secondSelection.id);
+                el1.classList.add('card-wrong');
+                el2.classList.add('card-wrong');
+                setTimeout(() => {
+                    firstSelection.state = 'idle';
+                    secondSelection.state = 'idle';
+                    firstSelection = null;
+                    secondSelection = null;
+                    isProcessing = false;
+                    renderGrid();
+                }, 800);
+            }
+        }
+
+        async function saveToNotion(word, mnemonic = "") {
+            if (!config.notionKey || !config.notionDb) {
+                showToast("Setup Notion in settings first!");
+                return;
+            }
+            
+            showToast(`Syncing "${word}" to Notion...`);
+            const dbId = extractNotionId(config.notionDb);
+            const proxy = 'https://corsproxy.io/?';
+
+            try {
+                const queryUrl = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/databases/${dbId}/query`)}`;
+                const queryRes = await fetch(queryUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${config.notionKey}`,
+                        'Content-Type': 'application/json',
+                        'Notion-Version': '2022-06-28'
+                    },
+                    body: JSON.stringify({
+                        filter: { property: config.colWord, title: { equals: word } }
+                    })
+                });
+                
+                const queryData = await queryRes.json();
+                const existingPage = queryData.results?.[0];
+
+                const vocabItem = originalWordPoolItem(word);
+                const props = {};
+                
+                if (!existingPage) {
+                    props[config.colWord] = { title: [{ text: { content: word } }] };
+                    props[config.colDef] = { rich_text: [{ text: { content: vocabItem?.def || "" } }] };
+                }
+
+                if (mnemonic) props[config.colMnemonic] = { rich_text: [{ text: { content: mnemonic } }] };
+                if (vocabItem?.pos) props[config.colPos] = { select: { name: vocabItem.pos } };
+
+                let url, method;
+                if (existingPage) {
+                    url = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/pages/${existingPage.id}`)}`;
+                    method = 'PATCH';
+                } else {
+                    url = `${proxy}${encodeURIComponent(`https://api.notion.com/v1/pages`)}`;
+                    method = 'POST';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${config.notionKey}`,
+                        'Content-Type': 'application/json',
+                        'Notion-Version': '2022-06-28'
+                    },
+                    body: JSON.stringify(existingPage ? { properties: props } : { parent: { database_id: dbId }, properties: props })
+                });
+
+                if (response.ok) {
+                    showToast(existingPage ? `Updated row for "${word}"` : `Added "${word}" to Notion!`);
+                } else {
+                    const err = await response.json();
+                    showToast(`Notion: ${err.message || "Connection error"}`);
+                }
+            } catch (error) {
+                showToast("Notion Error: Check Link or Token.");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('translate-y-24');
+            setTimeout(() => toast.classList.add('translate-y-24'), 4000);
+        }
+
+        window.onload = () => {
+            setupLevel();
+            document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+            document.getElementById('closeSentence').onclick = () => document.getElementById('sentenceModal').classList.add('hidden');
+            document.getElementById('closeAiModal').onclick = () => document.getElementById('aiModal').classList.add('hidden');
+            
+            document.getElementById('saveAiToNotion').onclick = () => {
+                if (currentAiData) saveToNotion(currentAiData.word, currentAiData.mnemonic);
+            };
+
+            document.getElementById('saveSettings').onclick = () => {
+                const fields = ['geminiKey', 'notionKey', 'notionDb', 'colWord', 'colDef', 'colMnemonic', 'colPos'];
+                fields.forEach(id => {
+                    const val = document.getElementById(id).value.trim();
+                    config[id] = val;
+                    localStorage.setItem(`notion_config_${id}`, val);
+                });
+                document.getElementById('settingsModal').classList.add('hidden');
+                showToast("Settings Saved!");
+            };
+            document.getElementById('nextLevelBtn').onclick = setupLevel;
+
+            const fields = ['geminiKey', 'notionKey', 'notionDb', 'colWord', 'colDef', 'colMnemonic', 'colPos'];
+            fields.forEach(id => {
+                const saved = localStorage.getItem(`notion_config_${id}`);
+                if (saved) {
+                    config[id] = saved;
+                    document.getElementById(id).value = saved;
+                }
+            });
+            
+            if (!document.getElementById('colWord').value) document.getElementById('colWord').value = 'Word';
+            if (!document.getElementById('colDef').value) document.getElementById('colDef').value = 'Definition';
+            if (!document.getElementById('colMnemonic').value) document.getElementById('colMnemonic').value = 'Mnemonics';
+            if (!document.getElementById('colPos').value) document.getElementById('colPos').value = 'Part of Speech';
+        };
+    </script>
+</body>
+</html>
