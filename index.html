@@ -130,7 +130,7 @@
                 <div class="flex justify-center mb-4">
                      <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-purple-400"></i>
                 </div>
-                <p class="text-purple-200">Asking Gemini for memory tricks...</p>
+                <p id="loadingStatusText" class="text-purple-200">Asking Gemini for memory tricks...</p>
             </div>
 
             <div id="aiContent" class="hidden space-y-6 text-gray-300">
@@ -202,7 +202,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Gemini Model</label>
                     <input type="text" id="geminiModel" placeholder="e.g. gemini-2.0-flash" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
-                    <p class="text-[9px] text-gray-400 mt-1 uppercase tracking-tighter">Verified models: gemini-2.0-flash, gemini-2.5-flash</p>
+                    <p class="text-[9px] text-gray-400 mt-1 uppercase tracking-tighter">Verified models: gemini-2.0-flash, gemini-2.0-flash-lite</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notion Secret Token</label>
@@ -287,6 +287,7 @@
             const modal = document.getElementById('aiModal');
             const aiWord = document.getElementById('aiWord');
             const loading = document.getElementById('aiLoading');
+            const statusText = document.getElementById('loadingStatusText');
             const content = document.getElementById('aiContent');
             const saveBtn = document.getElementById('saveAiToNotion');
             
@@ -294,10 +295,11 @@
             document.getElementById('aiModelBadge').innerText = `${config.geminiModel.toUpperCase()} Deep Dive`;
             modal.classList.remove('hidden');
             loading.classList.remove('hidden');
+            statusText.innerText = "Asking Gemini for memory tricks...";
             content.classList.add('hidden');
             saveBtn.classList.add('hidden');
 
-            const cacheKey = `gemini_v1200_${wordData.content.toLowerCase()}_${config.geminiModel}`;
+            const cacheKey = `gemini_v1300_${wordData.content.toLowerCase()}_${config.geminiModel}`;
             const cachedData = localStorage.getItem(cacheKey);
 
             if (cachedData) {
@@ -305,10 +307,9 @@
                 return;
             }
 
-            const instruction = `You are a linguistics tutor. For the word "${wordData.content}", create a mnemonic device using Capitalization. Also provide the etymology and 3 usage pitfalls. Respond ONLY with a JSON object: {"mnemonic": "...", "etymology": "...", "pitfalls": ["p1", "p2", "p3"]}`;
+            const instruction = `You are a linguistics tutor. For the word "${wordData.content}", create a punny mnemonic device using Capitalization. Also provide the etymology and 3 usage pitfalls. Respond ONLY with a JSON object: {"mnemonic": "...", "etymology": "...", "pitfalls": ["p1", "p2", "p3"]}`;
 
             try {
-                // Trying v1beta which is often needed for 2.0 models
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent?key=${config.geminiKey.trim()}`;
                 
                 const response = await fetch(url, {
@@ -320,7 +321,9 @@
                 const result = await response.json();
 
                 if (!response.ok) {
-                    // Show actual error message from Google in the UI
+                    if (result.error?.message?.toLowerCase().includes("quota")) {
+                        throw new Error("Free limit reached. Please wait about 60 seconds before trying the next word!");
+                    }
                     throw new Error(result.error?.message || "AI Handshake error");
                 }
 
@@ -338,15 +341,14 @@
             } catch (error) {
                 console.error("AI Error:", error);
                 loading.classList.add('hidden');
-                aiWord.innerText = "Check Settings";
+                aiWord.innerText = "Speed Limit";
                 
-                // Show more helpful info in the mnemonic box
                 document.getElementById('aiContent').classList.remove('hidden');
-                document.getElementById('aiMnemonic').innerHTML = `<span class="text-red-400">Error:</span> ${error.message}<br><br><span class="text-xs text-gray-400">Try switching the model to <b>gemini-2.5-flash</b> in settings if this persists.</span>`;
-                document.getElementById('aiEtymology').innerText = "Access denied.";
+                document.getElementById('aiMnemonic').innerHTML = `<span class="text-orange-400">Notice:</span> ${error.message}`;
+                document.getElementById('aiEtymology').innerHTML = `<span class="text-gray-400">Google's Free Tier limits how fast we can ask for words. You can keep playing the game, just wait a minute for the next Deep Dive!</span>`;
                 document.getElementById('aiPitfalls').innerHTML = '';
                 
-                showToast("AI Error: Check the popup for details.");
+                showToast("AI Speed Limit: Wait a minute.");
             }
         }
 
